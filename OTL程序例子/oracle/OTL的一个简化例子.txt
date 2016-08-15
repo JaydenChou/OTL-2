@@ -1,0 +1,42 @@
+#include <iostream>
+using namespace std;	
+#define OTL_ORA10G		 // 使用宏指明底层数据库API类型
+#include "otlv4.h"
+#pragma comment(lib, "oci.lib")
+
+otl_connect db; // connect object
+
+int select()
+{ 
+	otl_stream st(1, "select deptno from scott.dept where loc='DALLAS'", db);
+	int deptno;
+	st >> deptno;
+	return deptno;
+}
+
+int main()
+{
+	otl_connect::otl_initialize();			// initialize OCI environment
+	try
+	{
+		//db.rlogon("system/hisensoft@APTS107    "); // connect to Oracle
+		db.server_attach(); 
+		db.session_begin("system","hisensoft"); 
+
+		int val = select(); // select records from table
+		cout <<"deptno: " << val << endl;
+
+		db.session_end();
+		db.server_detach();
+	}
+	catch(otl_exception& e) // intercept OTL exceptions
+	{
+		cerr << "ERROR: code[" <<e.code<<"] ";
+		cerr << e.msg << endl; // print out error message
+		cerr << e.stm_text << endl; // print out SQL that caused the error
+		cerr << e.var_info << endl; // print out the variable that caused the error
+	}
+	// db.logoff(); // disconnect from Oracle
+
+	return 0;
+}
